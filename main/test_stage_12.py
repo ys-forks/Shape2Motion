@@ -114,7 +114,7 @@ def train():
                 batch_stage_1 = tf.Variable(0,name='stage1/batch')
                 bn_decay = get_bn_decay(batch_stage_1)
                 tf.summary.scalar('bn_decay', bn_decay)
-                print "--- Get model and loss"
+                print("--- Get model and loss")
                 # Get model and loss 
                 end_points,dof_feat,simmat_feat = MODEL.get_feature(pointclouds_pl, is_training_pl,STAGE,bn_decay=bn_decay)
                 pred_labels_key_p,pred_labels_direction,pred_regression_direction,\
@@ -136,15 +136,15 @@ def train():
                 tf.summary.scalar('labels_type_acc', task_4_acc)
                 tf.summary.scalar('loss', loss)
 
-                print "--- Get training operator"
+                print("--- Get training operator")
                 # Get training operator
-                learning_rate = get_learning_rate(batch)
+                learning_rate = get_learning_rate(batch_stage_1)
                 tf.summary.scalar('learning_rate', learning_rate)
                 if OPTIMIZER == 'momentum':
                     optimizer = tf.train.MomentumOptimizer(learning_rate, momentum=MOMENTUM)
                 elif OPTIMIZER == 'adam':
                     optimizer = tf.train.AdamOptimizer(learning_rate)
-                train_op = optimizer.minimize(loss, global_step=batch)
+                train_op = optimizer.minimize(loss, global_step=batch_stage_1)
             
                 # Add ops to save and restore all the variables.
                 saver = tf.train.Saver(max_to_keep=100)
@@ -159,32 +159,32 @@ def train():
                 batch_stage_2 = tf.Variable(0,name='stage2/batch_2')
                 bn_decay = get_bn_decay(batch_stage_2)
                 tf.summary.scalar('bn_decay', bn_decay)
-                print "--- Get model and loss"
+                print("--- Get model and loss")
                 # Get model and loss 
                 end_points,dof_feat,simmat_feat = MODEL.get_feature(pointclouds_pl, is_training_feature,STAGE,bn_decay=bn_decay)
                 pred_dof_score,all_feat = MODEL.get_stage_2(dof_feat,simmat_feat,dof_mask_pl,proposal_nx_pl,is_training_pl,bn_decay=bn_decay)
                 loss = MODEL.get_stage_2_loss(pred_dof_score,dof_score_pl,dof_mask_pl)
                 tf.summary.scalar('loss', loss)
 
-                print "--- Get training operator"
+                print("--- Get training operator")
                 # Get training operator
                 learning_rate = get_learning_rate(batch_stage_2)
                 tf.summary.scalar('learning_rate', learning_rate)
                 variables = tf.contrib.framework.get_variables_to_restore()
-                print "variables"
+                print("variables")
                 for v in variables:
-                    print v
-                print "-------------------------"
+                    print(v)
+                print("-------------------------")
                 variables_to_resotre = [v for v in variables if v.name.split('/')[0]=='pointnet']
-                print "variables_to_resotre"
+                print("variables_to_resotre")
                 for v in variables_to_resotre:
-                    print v
-                print "-------------------------"
+                    print(v)
+                print("-------------------------")
                 variables_to_train = [v for v in variables if v.name.split('/')[0]=='stage2']
-                print "variables_to_train"
+                print("variables_to_train")
                 for v in variables_to_train:
-                    print v
-                print "-------------------------"
+                    print(v)
+                print("-------------------------")
                 if OPTIMIZER == 'momentum':
                     optimizer = tf.train.MomentumOptimizer(learning_rate, momentum=MOMENTUM)
                 elif OPTIMIZER == 'adam':

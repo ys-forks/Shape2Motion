@@ -95,13 +95,13 @@ def train():
             batch = tf.Variable(0)
             bn_decay = get_bn_decay(batch)
             tf.summary.scalar('bn_decay', bn_decay)
-            print "--- Get model and loss"
+            print("--- Get model and loss")
             # Get model and loss 
             pred_proposal,pred_dof_regression = MODEL.get_stage_3(pointclouds_pl,field_pl, is_training_pl,bn_decay=bn_decay)
             task_1_acc,iou,loss1,loss2,loss = MODEL.get_stage_3_loss(pred_proposal,pred_dof_regression,proposal_pl,dof_regression_pl)
             tf.summary.scalar('loss', loss)
 
-            print "--- Get training operator"
+            print("--- Get training operator")
             # Get training operator
             learning_rate = get_learning_rate(batch)
             tf.summary.scalar('learning_rate', learning_rate)
@@ -111,9 +111,9 @@ def train():
                 optimizer = tf.train.AdamOptimizer(learning_rate)
             train_op = optimizer.minimize(loss, global_step=batch)
             variables = tf.contrib.framework.get_variables_to_restore()
-            print "variables"
+            print("variables")
             for v in variables:
-                print v
+                print(v)
             # Add ops to save and restore all the variables.
             saver = tf.train.Saver(max_to_keep=100)
        
@@ -162,7 +162,7 @@ def train_one_epoch_stage_3(sess, ops, train_writer):
     is_training = True
     permutation = np.random.permutation(328)
     for i in range(328/4):
-        load_data_start_time = time.time();
+        load_data_start_time = time.time()
         loadpath = './train_data_stage_3/train_data_stage_3_data_'+str(permutation[i*4]+1)+'.mat'
         train_data = sio.loadmat(loadpath)['Training_data']
         load_data_duration = time.time() - load_data_start_time

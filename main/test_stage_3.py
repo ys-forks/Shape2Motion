@@ -95,13 +95,13 @@ def train():
             batch = tf.Variable(0)
             bn_decay = get_bn_decay(batch)
             tf.summary.scalar('bn_decay', bn_decay)
-            print "--- Get model and loss"
+            print("--- Get model and loss")
             # Get model and loss 
             pred_proposal,pred_dof_regression = MODEL.get_stage_3(pointclouds_pl,field_pl, is_training_pl,bn_decay=bn_decay)
             task_1_acc,iou,loss1,loss2,loss = MODEL.get_stage_3_loss(pred_proposal,pred_dof_regression,proposal_pl,dof_regression_pl)
             tf.summary.scalar('loss', loss)
 
-            print "--- Get training operator"
+            print("--- Get training operator")
             # Get training operator
             learning_rate = get_learning_rate(batch)
             tf.summary.scalar('learning_rate', learning_rate)

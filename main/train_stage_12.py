@@ -114,7 +114,7 @@ def train():
                 batch_stage_1 = tf.Variable(0,name='stage1/batch')
                 bn_decay = get_bn_decay(batch_stage_1)
                 tf.summary.scalar('bn_decay', bn_decay)
-                print "--- Get model and loss"
+                print("--- Get model and loss")
                 # Get model and loss 
                 end_points,dof_feat,simmat_feat = MODEL.get_feature(pointclouds_pl, is_training_pl,STAGE,bn_decay=bn_decay)
                 pred_labels_key_p,pred_labels_direction,pred_regression_direction,\
@@ -136,7 +136,7 @@ def train():
                 tf.summary.scalar('labels_type_acc', task_4_acc)
                 tf.summary.scalar('loss', loss)
 
-                print "--- Get training operator"
+                print("--- Get training operator")
                 # Get training operator
                 learning_rate = get_learning_rate(batch_stage_1)
                 tf.summary.scalar('learning_rate', learning_rate)
@@ -158,13 +158,13 @@ def train():
                 batch_stage_2 = tf.Variable(0,name='stage2/batch_2')
                 bn_decay = get_bn_decay(batch_stage_2)
                 tf.summary.scalar('bn_decay', bn_decay)
-                print "--- Get model and loss"
+                print("--- Get model and loss")
                 # Get model and loss 
                 end_points,dof_feat,simmat_feat = MODEL.get_feature(pointclouds_pl, is_training_feature,STAGE,bn_decay=bn_decay)
                 pred_dof_score,all_feat = MODEL.get_stage_2(dof_feat,simmat_feat,dof_mask_pl,proposal_nx_pl,is_training_pl,bn_decay=bn_decay)
                 loss = MODEL.get_stage_2_loss(pred_dof_score,dof_score_pl,dof_mask_pl)
                 tf.summary.scalar('loss', loss)
-                print "--- Get training operator"
+                print("--- Get training operator")
                 # Get training operator
                 learning_rate = get_learning_rate(batch_stage_2)
                 tf.summary.scalar('learning_rate', learning_rate)
@@ -199,7 +199,8 @@ def train():
             init = tf.global_variables_initializer()
             sess.run(init)
             saver.restore(sess,'./stage_1_log/model100.ckpt')
-	if STAGE==1:
+	    
+        if STAGE==1:
             ops = {'pointclouds_pl': pointclouds_pl,
                'labels_key_p': labels_key_p,
                'labels_direction': labels_direction,
