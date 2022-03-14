@@ -2,6 +2,7 @@ import argparse
 import math
 from datetime import datetime
 import h5py
+import mat73
 import numpy as np
 import tensorflow as tf
 import socket
@@ -19,13 +20,13 @@ import provider
 import tf_util
 import scipy.io as sio
 parser = argparse.ArgumentParser()
-parser.add_argument('--gpu', type=int, default=2, help='GPU to use [default: GPU 0]')
+parser.add_argument('--gpu', type=int, default=0, help='GPU to use [default: GPU 0]')
 parser.add_argument('--model', default='model', help='Model name [default: model]')
 parser.add_argument('--stage_1_log_dir', default='stage_1_log', help='Log dir [default: log]')
 parser.add_argument('--stage_2_log_dir', default='stage_2_log', help='Log dir [default: log]')
 parser.add_argument('--num_point', type=int, default=4096, help='Point Number [default: 2048]')
 parser.add_argument('--max_epoch', type=int, default=101, help='Epoch to run [default: 201]')
-parser.add_argument('--batch_size', type=int, default=1, help='Batch Size during training [default: 32]')
+parser.add_argument('--batch_size', type=int, default=8, help='Batch Size during training [default: 32]')
 parser.add_argument('--learning_rate', type=float, default=0.001, help='Initial learning rate [default: 0.001]')
 parser.add_argument('--momentum', type=float, default=0.9, help='Initial learning rate [default: 0.9]')
 parser.add_argument('--optimizer', default='adam', help='adam or momentum [default: adam]')
@@ -162,6 +163,7 @@ def train():
                 # Get model and loss 
                 end_points,dof_feat,simmat_feat = MODEL.get_feature(pointclouds_pl, is_training_feature,STAGE,bn_decay=bn_decay)
                 pred_dof_score,all_feat = MODEL.get_stage_2(dof_feat,simmat_feat,dof_mask_pl,proposal_nx_pl,is_training_pl,bn_decay=bn_decay)
+            
                 loss = MODEL.get_stage_2_loss(pred_dof_score,dof_score_pl,dof_mask_pl)
                 tf.summary.scalar('loss', loss)
                 print("--- Get training operator")
@@ -250,6 +252,7 @@ def train():
                'pred_dof_score': pred_dof_score,
                'is_training_pl': is_training_pl,
                'loss': loss,
+            #    'pred_dof_score_o': pred_dof_score_o,
                'train_op': train_op,
                'merged': merged,
                'step': batch_stage_2,
@@ -268,8 +271,8 @@ def train():
 
 def train_one_epoch_stage_1(sess, ops, train_writer):
     is_training = True
-    permutation = np.random.permutation(5)
-    for i in range(len(permutation)/4):
+    permutation = np.random.permutation(4)
+    for i in range(int(len(permutation)/4)):
         load_data_start_time = time.time();
         loadpath = './train_data/training_data_'+str(permutation[i*4]+1)+'.mat'
         train_data = sio.loadmat(loadpath)['Training_data']
@@ -320,9 +323,9 @@ def train_one_epoch_stage_1(sess, ops, train_writer):
                 batch_regression_position[cnt,:,:] = tmp_data['motion_position_param'][0,0]
                 batch_labels_type[cnt,:] = np.squeeze(tmp_data['motion_dof_type'][0,0])
                 tmp_simmat = tmp_data['similar_matrix'][0,0]
-                batch_simmat_pl[cnt,:,:] = tmp_simmat + tmp_simmat.T
+                # batch_simmat_pl[cnt,:,:] = tmp_simmat + tmp_simmat.T
                 tmp_neg_simmat = 1 - tmp_simmat
-                tmp_neg_simmat = tmp_neg_simmat - np.eye(NUM_POINT) 
+                # tmp_neg_simmat = tmp_neg_simmat - np.eye(NUM_POINT)
                 batch_neg_simmat_pl[cnt,:,:] = tmp_neg_simmat
             feed_dict = {ops['pointclouds_pl']: batch_inputs,
                          ops['labels_key_p']: batch_labels_key_p,
@@ -387,8 +390,9 @@ def train_one_epoch_stage_1(sess, ops, train_writer):
 
 def train_one_epoch_stage_2(sess, ops, train_writer):
     is_training = True
-    permutation = np.random.permutation(328)
-    for i in range(len(permutation)/4):
+    # permutation = np.random.permutation(328)
+    permutation = np.random.permutation(4)
+    for i in range(int(len(permutation)/4)):
         load_data_start_time = time.time();
         loadpath = './train_data_stage_2/train_stage_2_data_'+str(permutation[i*4]+1)+'.mat'
         train_data = sio.loadmat(loadpath)['Training_data']
@@ -404,6 +408,7 @@ def train_one_epoch_stage_2(sess, ops, train_writer):
             print(train_data.shape)
         
         num_data = train_data.shape[0]
+        
         num_batch = num_data // BATCH_SIZE
         total_loss = 0.0
         process_start_time = time.time()
@@ -429,11 +434,15 @@ def train_one_epoch_stage_2(sess, ops, train_writer):
                          ops['dof_score_pl']: batch_dof_score,
                          ops['is_training_pl']: is_training}
                     
+            # summary, step, _, loss_val, pred_dof_score_o = sess.run([ops['merged'], ops['step'], \
+            #                      ops['train_op'],ops['loss'], ops['pred_dof_score_o']],feed_dict=feed_dict)
             summary, step, _, loss_val = sess.run([ops['merged'], ops['step'], \
                                  ops['train_op'],ops['loss']],feed_dict=feed_dict)
             train_writer.add_summary(summary, step)
             total_loss += loss_val
-            #print('loss: %f' % loss_val)
+            # print('loss: %f' % loss_val)
+            # import pdb
+            # pdb.set_trace()
         total_loss = total_loss * 1.0 / num_batch
         process_duration = time.time() - process_start_time
         examples_per_sec = num_data/process_duration

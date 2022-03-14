@@ -2,6 +2,11 @@ function evaluation2
 filepath = 'test_result_s_3';
 file = dir(fullfile(filepath,'*.mat'));
 filenames = {file.name}';
+
+FindFiles = 'train_data_stage_2';
+Files = dir(fullfile(FindFiles,'*.mat'));
+filenames2 = {Files.name}';
+
 all_p_error = [];
 all_d_err = [];
 all_epe = [];
@@ -10,6 +15,10 @@ all_iou_before = [];
 all_iou_after = [];
 for i =1:size(filenames,1)
     temp_name = filenames{i};
+    temp_name2 = filenames2{i};
+    load_path2 = [FindFiles '/' temp_name2];
+    load(load_path2);
+
     load_path = [filepath '/' temp_name];
     load(load_path);
     [p_error,d_err,epe,T_err,temp_iou_1,temp_iou_2] = cellfun(@(x) solve(x),Training_data,'Unif',0);

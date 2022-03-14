@@ -1,23 +1,26 @@
 function nms
-FindFiles = 'test_data/';
+FindFiles = 'train_data/';
 Files = dir(fullfile(FindFiles,'*.mat'));
 filenames = {Files.name}';
 
 for i = 1:size(filenames,1)
+    i
     temp_name = filenames{i};
     load_path_1 = [FindFiles temp_name];
     load(load_path_1);
-    temp_name = temp_name(11:length(temp_name)-4);
-    load_path2 = ['./test_pred_' temp_name '.mat'];
+    temp_name = temp_name(10:length(temp_name)-4);
+    load_path2 = ['train_stage_1_result/test_pred_' temp_name '.mat'];
     load(load_path2);
     a = size(Training_data,1);
     pred_simmat = mat2cell(pred_simmat_val,ones(a,1));
     pred_conf = mat2cell(pred_conf_logits_val,ones(a,1));
-    cellfun(@(x,y,z) compute(x,y,z),pred_simmat,pred_conf,Training_data,'Unif',0);
+    pick_mat = cellfun(@(x,y,z) compute(x,y,z),pred_simmat,pred_conf,Training_data,'Unif',0);
+    save_path = ['nms_result/nms_',temp_name,'.mat'];
+    save(save_path,'pick_mat','-v7.3');
 end
 end
 
-function compute(pred_simmat,pred_conf,Training_data)
+function pick_mat = compute(pred_simmat,pred_conf,Training_data)
 tic;
 pred_simmat = reshape(pred_simmat,4096,4096);
 GT_proposal = Training_data.proposal;

@@ -23,8 +23,8 @@ parser.add_argument('--gpu', type=int, default=0, help='GPU to use [default: GPU
 parser.add_argument('--model', default='model2', help='Model name [default: model]')
 parser.add_argument('--stage_3_log_dir', default='stage_3_log', help='Log dir [default: log]')
 parser.add_argument('--num_point', type=int, default=4096, help='Point Number [default: 2048]')
-parser.add_argument('--max_epoch', type=int, default=101, help='Epoch to run [default: 201]')
-parser.add_argument('--batch_size', type=int, default=8, help='Batch Size during training [default: 32]')
+parser.add_argument('--max_epoch', type=int, default=51, help='Epoch to run [default: 201]')
+parser.add_argument('--batch_size', type=int, default=4, help='Batch Size during training [default: 32]')
 parser.add_argument('--learning_rate', type=float, default=0.001, help='Initial learning rate [default: 0.001]')
 parser.add_argument('--momentum', type=float, default=0.9, help='Initial learning rate [default: 0.9]')
 parser.add_argument('--optimizer', default='adam', help='adam or momentum [default: adam]')
@@ -160,8 +160,8 @@ def train():
 
 def train_one_epoch_stage_3(sess, ops, train_writer):
     is_training = True
-    permutation = np.random.permutation(328)
-    for i in range(328/4):
+    permutation = np.random.permutation(5)
+    for i in range(int(len(permutation)/4)):
         load_data_start_time = time.time()
         loadpath = './train_data_stage_3/train_data_stage_3_data_'+str(permutation[i*4]+1)+'.mat'
         train_data = sio.loadmat(loadpath)['Training_data']

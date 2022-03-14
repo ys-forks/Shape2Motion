@@ -24,7 +24,7 @@ parser.add_argument('--model', default='model2', help='Model name [default: mode
 parser.add_argument('--stage_3_log_dir', default='stage_3_log', help='Log dir [default: log]')
 parser.add_argument('--num_point', type=int, default=4096, help='Point Number [default: 2048]')
 parser.add_argument('--max_epoch', type=int, default=1, help='Epoch to run [default: 201]')
-parser.add_argument('--batch_size', type=int, default=8, help='Batch Size during training [default: 32]')
+parser.add_argument('--batch_size', type=int, default=4, help='Batch Size during training [default: 32]')
 parser.add_argument('--learning_rate', type=float, default=0.001, help='Initial learning rate [default: 0.001]')
 parser.add_argument('--momentum', type=float, default=0.9, help='Initial learning rate [default: 0.9]')
 parser.add_argument('--optimizer', default='adam', help='adam or momentum [default: adam]')
@@ -128,7 +128,7 @@ def train():
 
 
         # Init variables
-        model_path = './'+LOG_DIR + '/model10.ckpt'
+        model_path = './'+LOG_DIR + '/model50.ckpt'
         init = tf.global_variables_initializer()
         sess.run(init)
         saver.restore(sess,model_path)
@@ -154,9 +154,9 @@ def train():
 
 def eval_one_epoch_stage_3(sess, ops, train_writer):
     is_training = True
-    for i in range(47):
+    for i in range(6):
         load_data_start_time = time.time();
-        loadpath = './test_data_stage_3/train_data_stage_3_data_'+str(i+1)+'.mat'
+        loadpath = './train_data_stage_3/train_data_stage_3_data_'+str(i+1)+'.mat'
         train_data = sio.loadmat(loadpath)['Training_data']
         load_data_duration = time.time() - load_data_start_time
         log_string('\t%s: %s load time: %f' % (datetime.now(),loadpath,load_data_duration))
@@ -211,7 +211,7 @@ def eval_one_epoch_stage_3(sess, ops, train_writer):
         log_string('\tTask1 loss: %f,Task2 loss: %f'%(total_loss1,total_loss2))
         log_string('\tTask1 acc: %f,Task1 iou: %f'%(total_acc,total_iou))
         temp_name = loadpath[39:-4]
-        sio.savemat('test_s_3_pred_'+temp_name, {'pred_proposal': pred_proposal,'pred_dof_regression': pred_dof_regression})
+        sio.savemat('test_result_s_3/test_s_3_pred_'+temp_name+'.mat', {'pred_proposal': pred_proposal,'pred_dof_regression': pred_dof_regression})
 
 
 if __name__ == "__main__":

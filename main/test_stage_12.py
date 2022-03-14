@@ -16,16 +16,17 @@ sys.path.append(BASE_DIR)
 sys.path.append(os.path.join(ROOT_DIR, 'models'))
 sys.path.append(os.path.join(ROOT_DIR, 'utils'))
 import provider
+import hdf5storage
 import tf_util
 import scipy.io as sio
 parser = argparse.ArgumentParser()
-parser.add_argument('--gpu', type=int, default=3, help='GPU to use [default: GPU 0]')
+parser.add_argument('--gpu', type=int, default=0, help='GPU to use [default: GPU 0]')
 parser.add_argument('--model', default='model', help='Model name [default: model]')
 parser.add_argument('--stage_1_log_dir', default='stage_1_log', help='Log dir [default: log]')
 parser.add_argument('--stage_2_log_dir', default='stage_2_log', help='Log dir [default: log]')
 parser.add_argument('--num_point', type=int, default=4096, help='Point Number [default: 2048]')
 parser.add_argument('--max_epoch', type=int, default=1, help='Epoch to run [default: 201]')
-parser.add_argument('--batch_size', type=int, default=1, help='Batch Size during training [default: 32]')
+parser.add_argument('--batch_size', type=int, default=8, help='Batch Size during training [default: 32]')
 parser.add_argument('--learning_rate', type=float, default=0.001, help='Initial learning rate [default: 0.001]')
 parser.add_argument('--momentum', type=float, default=0.9, help='Initial learning rate [default: 0.9]')
 parser.add_argument('--optimizer', default='adam', help='adam or momentum [default: adam]')
@@ -214,7 +215,7 @@ def train():
             #init = tf.global_variables_initializer()
             #sess.run(init)
             saver.restore(sess,model_path)
-	if STAGE==1:
+        if STAGE==1:
             ops = {'pointclouds_pl': pointclouds_pl,
                'labels_key_p': labels_key_p,
                'labels_direction': labels_direction,
@@ -272,26 +273,11 @@ def train():
 
 
 def eval_one_epoch_stage_1(sess, ops, train_writer):
-    is_training = True
-    dataset = ['./train_data/training_data_1.mat','./train_data/training_data_2.mat',
-               './train_data/training_data_3.mat','./train_data/training_data_4.mat',
-               './train_data/training_data_5.mat','./train_data/training_data_6.mat',
-               './train_data/training_data_7.mat','./train_data/training_data_8.mat',
-               './train_data/training_data_9.mat','./train_data/training_data_10.mat',
-               './train_data/training_data_11.mat','./train_data/training_data_12.mat',
-               './train_data/training_data_13.mat','./train_data/training_data_14.mat',
-               './train_data/training_data_15.mat','./train_data/training_data_16.mat',
-               './train_data/training_data_17.mat','./train_data/training_data_18.mat',
-               './train_data/training_data_19.mat','./train_data/training_data_20.mat',
-               './train_data/training_data_21.mat','./train_data/training_data_22.mat',
-               './train_data/training_data_23.mat','./train_data/training_data_24.mat',
-               './train_data/training_data_25.mat','./train_data/training_data_26.mat',
-               './train_data/training_data_27.mat','./train_data/training_data_28.mat',
-               './train_data/training_data_29.mat','./train_data/training_data_30.mat',
-               './train_data/training_data_31.mat','./train_data/training_data_32.mat',
-               './train_data/training_data_33.mat','./train_data/training_data_34.mat',
-               './train_data/training_data_35.mat','./train_data/training_data_36.mat',
-               './train_data/training_data_37.mat']
+    is_training = False
+    dataset = []
+    for i in range(4):
+        dataset.append(f'./train_data/training_data_{i+1}.mat')
+
     for i in range(len(dataset)):
         load_data_start_time = time.time();
         train_data = sio.loadmat(dataset[i])['Training_data']
@@ -339,9 +325,9 @@ def eval_one_epoch_stage_1(sess, ops, train_writer):
                 batch_regression_position[cnt,:,:] = tmp_data['motion_position_param'][0,0]
                 batch_labels_type[cnt,:] = np.squeeze(tmp_data['motion_dof_type'][0,0])
                 tmp_simmat = tmp_data['similar_matrix'][0,0]
-                batch_simmat_pl[cnt,:,:] = tmp_simmat + tmp_simmat.T
+                # batch_simmat_pl[cnt,:,:] = tmp_simmat + tmp_simmat.T
                 tmp_neg_simmat = 1 - tmp_simmat
-                tmp_neg_simmat = tmp_neg_simmat - np.eye(NUM_POINT) 
+                # tmp_neg_simmat = tmp_neg_simmat - np.eye(NUM_POINT) 
                 batch_neg_simmat_pl[cnt,:,:] = tmp_neg_simmat
             feed_dict = {ops['pointclouds_pl']: batch_inputs,
                          ops['labels_key_p']: batch_labels_key_p,
@@ -412,7 +398,7 @@ def eval_one_epoch_stage_1(sess, ops, train_writer):
         pred_simmat_val = (pred_simmat_val<=255)*pred_simmat_val+(pred_simmat_val>255)*255
         temp_name = dataset[i]
         temp_name = temp_name[22:-4]
-        sio.savemat('test_pred_'+temp_name, {'pred_labels_key_p_val': pred_labels_key_p_val, \
+        sio.savemat('./train_stage_1_result/test_pred_'+temp_name+'.mat', {'pred_labels_key_p_val': pred_labels_key_p_val, \
                                                     'pred_labels_direction_val': pred_labels_direction_val, \
                                                     'pred_regression_direction_val': pred_regression_direction_val,\
                                                     'pred_regression_position_val': pred_regression_position_val, \
@@ -421,8 +407,12 @@ def eval_one_epoch_stage_1(sess, ops, train_writer):
                                                     'pred_conf_logits_val': pred_conf_logits_val})
 
 def eval_one_epoch_stage_2(sess, ops, train_writer):
-    is_training = True
-    dataset = ['./test_data_stage_2/train_stage_2_data_4.mat']
+    is_training = False
+
+    dataset = []
+    for i in range(6):
+        dataset.append(f'./train_data_stage_2/train_stage_2_data_{i+1}.mat')
+    # dataset = ['./test_data_stage_2/train_stage_2_data_4.mat']
     for i in range(len(dataset)):
         load_data_start_time = time.time();
         loadpath = dataset[i]
@@ -450,13 +440,15 @@ def eval_one_epoch_stage_2(sess, ops, train_writer):
                 batch_dof_mask[cnt,:] = np.squeeze(tmp_data['dof_mask'][0,0])
                 batch_proposal_nx[cnt,:] = np.squeeze(tmp_data['proposal_nx'][0,0])
                 batch_dof_score[cnt,:] = np.squeeze(tmp_data['dof_score'][0,0])
+            
             feed_dict = {ops['pointclouds_pl']: batch_inputs,
                          ops['proposal_nx_pl']: batch_proposal_nx,
                          ops['dof_mask_pl']: batch_dof_mask,
                          ops['dof_score_pl']: batch_dof_score,
                          ops['is_training_pl']: is_training}
-                    
-            summary, step, loss_val,pred_dof_score_val[begin_idx:end_idx,:],all_feat[begin_idx:end_idx,:,:]= sess.run([ops['merged'], ops['step'], \
+            # import pdb
+            # pdb.set_trace()
+            summary, step, loss_val,pred_dof_score_val[begin_idx:end_idx,np.arange(0, NUM_POINT),0],all_feat[begin_idx:end_idx,np.arange(0, NUM_POINT),:]= sess.run([ops['merged'], ops['step'], \
                                  ops['loss'],ops['pred_dof_score'],ops['all_feat']],feed_dict=feed_dict)
             train_writer.add_summary(summary, step)
             total_loss += loss_val
@@ -469,7 +461,9 @@ def eval_one_epoch_stage_2(sess, ops, train_writer):
            % (datetime.now(),step,total_loss,process_duration,examples_per_sec,sec_per_batch))
         temp_name = dataset[i]
         temp_name = temp_name[34:-4]
-        sio.savemat('test_s_2_pred_'+temp_name, {'pred_dof_score_val': pred_dof_score_val,'all_feat':all_feat})
+        # print(pred_dof_score_val)
+        sio.savemat('test_result_s_2/test_s_2_pred_'+temp_name+'.mat', {'pred_dof_score_val': pred_dof_score_val,'all_feat':all_feat})
+        # hdf5storage.savemat('test_s_2_pred_'+temp_name, {'pred_dof_score_val': pred_dof_score_val,'all_feat':all_feat})
 
 
 if __name__ == "__main__":

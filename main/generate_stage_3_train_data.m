@@ -1,7 +1,12 @@
 function generate_stage_3_data
+FindFiles = 'train_data_stage_2/';
+Files = dir(fullfile(FindFiles,'*.mat'));
+filenames = {Files.name}';
+filenum = cellfun(@(x)sscanf(x,'train_stage_2_data_%d.mat'), filenames);
+[~,Sidx] = sort(filenum);
+filenames = filenames(Sidx);
 
-load('temp_train');
-load('test_result');
+load('train_data_stage_2/train_stage_2_data_1.mat');
 pred_dof_score = mat2cell(pred_dof_score_val,ones(size(Training_data,1),1));
 data = cellfun(@(x,y) solve(x,y),Training_data,pred_dof_score,'Unif',0);
 Training_data = {};
@@ -12,7 +17,7 @@ save('stage_3_train','Training_data');
 end
 
 function data = solve(Training_data,pred_dof_score)
-pred_dof_score = reshape(pred_dof_score,4,4096);
+pred_dof_score = reshape(pred_dof_score,[],4096);
 dof_mask = Training_data.dof_mask;
 dof_pred = Training_data.dof_pred;
 pred_dof_score(:,dof_mask==0) = 1000;
@@ -37,7 +42,7 @@ for j = 1:3
 end
 data.field = field;
 data.s2_proposal = proposal_nx;
-%vis_data(data);
+% vis_data(data);
 end
 
 

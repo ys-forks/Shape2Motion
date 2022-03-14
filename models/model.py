@@ -39,7 +39,7 @@ def get_feature(point_cloud, is_training,stage,bn_decay=None):
     end_points['feats'] = net 
     if stage==1:
     	net = tf_util.dropout(net, keep_prob=0.5, is_training=is_training, scope='pointnet/dp1')
-    
+
     # dof_feature
     dof_feat = tf_util.conv1d(net, 128, 1, padding='VALID', bn=True, is_training=is_training, scope='pointnet/fc_dof', bn_decay=bn_decay)
     # simmat_feature
@@ -61,35 +61,37 @@ def get_stage_1(dof_feat,simmat_feat,is_training,bn_decay=None):
     batch_size = dof_feat.get_shape()[0].value
 
     #task1: key_point
-    feat1 = tf_util.conv1d(dof_feat,128,1,padding='VALID',activation_fn = None,scope = 'stage1/task1/fc1', bn_decay=bn_decay)
+    feat1 = tf_util.conv1d(dof_feat,128,1,padding='VALID', is_training=is_training,  bn=True,scope = 'stage1/task1/fc1', bn_decay=bn_decay)
     pred_labels_key_p = tf_util.conv1d(feat1, 2, 1, padding='VALID', activation_fn=None, scope='stage1/task1/fc2', bn_decay=bn_decay)
 
     #task2_1: labels_direction
-    feat2_1 = tf_util.conv1d(dof_feat,128,1,padding='VALID',activation_fn = None,scope = 'stage1/task2_1/fc1', bn_decay=bn_decay)
+    feat2_1 = tf_util.conv1d(dof_feat,128,1,padding='VALID',is_training=is_training, bn=True,scope = 'stage1/task2_1/fc1', bn_decay=bn_decay)
     pred_labels_direction = tf_util.conv1d(feat2_1, 15, 1, padding='VALID', activation_fn=None, scope='stage1/task2_1/fc2', bn_decay=bn_decay)
 
     #task2_2: regression_direction
-    feat2_2 = tf_util.conv1d(dof_feat,128,1,padding='VALID',activation_fn = None,scope = 'stage1/task2_2/fc1', bn_decay=bn_decay)
+    feat2_2 = tf_util.conv1d(dof_feat,128,1,padding='VALID',is_training=is_training,bn=True,scope = 'stage1/task2_2/fc1', bn_decay=bn_decay)
     pred_regression_direction = tf_util.conv1d(feat2_2, 3, 1, padding='VALID', activation_fn=None, scope='stage1/task2_2/fc2', bn_decay=bn_decay)
 
     #task_3: position
-    feat3 = tf_util.conv1d(dof_feat,128,1,padding='VALID',activation_fn = None,scope = 'stage1/task3/fc1', bn_decay=bn_decay)
+    feat3 = tf_util.conv1d(dof_feat,128,1,padding='VALID',is_training=is_training,bn=True,scope = 'stage1/task3/fc1', bn_decay=bn_decay)
     pred_regression_position = tf_util.conv1d(feat3, 3, 1, padding='VALID', activation_fn=None, scope='stage1/task3/fc2', bn_decay=bn_decay)
 
     #task_4: dof_type
-    feat4 = tf_util.conv1d(dof_feat,128,1,padding='VALID',activation_fn = None,scope = 'stage1/task4/fc1', bn_decay=bn_decay)
+    feat4 = tf_util.conv1d(dof_feat,128,1,padding='VALID',is_training=is_training,bn=True,scope = 'stage1/task4/fc1', bn_decay=bn_decay)
     pred_labels_type = tf_util.conv1d(feat4, 4, 1, padding='VALID', activation_fn=None, scope='stage1/task4/fc2', bn_decay=bn_decay)
 
     #task_5: similar matrix
-    feat5 = tf_util.conv1d(simmat_feat,128,1,padding='VALID',activation_fn = None,scope = 'stage1/task_5/fc1', bn_decay=bn_decay)
+    feat5 = tf_util.conv1d(simmat_feat,128,1,padding='VALID', is_training=is_training,activation_fn=None, scope = 'stage1/task_5/fc1', bn_decay=bn_decay)
     r = tf.reduce_sum(feat5*feat5,2)
     r = tf.reshape(r, [batch_size, -1, 1])
     D = r-2*tf.matmul(feat5,tf.transpose(feat5,perm=[0,2,1]))+tf.transpose(r, perm=[0,2,1])
-    pred_simmat = tf.maximum(10*D,0.)
+    D = tf.sqrt(D)
+    # pred_simmat = tf.maximum(10*D,0.)
+    pred_simmat = tf.maximum(D, 0.)
 
     #task_6: confidence map
-    feat6 = tf_util.conv1d(simmat_feat,128,1,padding='VALID',activation_fn = None,scope = 'stage1/task6/fc1', bn_decay=bn_decay)
-    conf_logits = tf_util.conv1d(feat6,1,1,padding='VALID',activation_fn = None,scope = 'stage1/task_6/fc2', bn_decay=bn_decay)
+    feat6 = tf_util.conv1d(simmat_feat,128,1,padding='VALID',is_training=is_training,bn=True, scope = 'stage1/task6/fc1', bn_decay=bn_decay)
+    conf_logits = tf_util.conv1d(feat6,1,1,padding='VALID',activation_fn=None, scope = 'stage1/task_6/fc2', bn_decay=bn_decay)
     pred_conf_logits = tf.nn.sigmoid(conf_logits, name='stage1/task_6/confidence')
 
     return pred_labels_key_p,pred_labels_direction,pred_regression_direction,pred_regression_position, \
@@ -102,7 +104,7 @@ def get_stage_1_loss(pred_labels_key_p,pred_labels_direction,pred_regression_dir
     num_point = pred_labels_key_p.get_shape()[1].value
     mask = tf.cast(labels_key_p,tf.float32)
     neg_mask = tf.ones_like(mask)-mask
-    Np = tf.expand_dims(tf.reduce_sum(mask,axis=1),1)     
+    Np = tf.expand_dims(tf.reduce_sum(mask,axis=1),1)
     Ng = tf.expand_dims(tf.reduce_sum(neg_mask,axis=1),1)  
     all_mask = tf.ones_like(mask)
     #loss:task1
@@ -128,12 +130,13 @@ def get_stage_1_loss(pred_labels_key_p,pred_labels_direction,pred_regression_dir
                           labels_type),tf.float32)*mask,axis = 1)/tf.reduce_sum(mask,axis=1))
 
     #loss: task_5
+    thresh_D = 100
     pos = pred_simmat*simmat_pl
-    neg = tf.maximum(80-pred_simmat,0) * neg_simmat_pl
+    neg = tf.maximum(thresh_D-pred_simmat,0) * neg_simmat_pl
     task_5_loss = tf.reduce_mean(pos+neg)
     #loss: task_6
     ng_label = tf.greater(simmat_pl,0.5)
-    ng = tf.less(pred_simmat,80)
+    ng = tf.less(pred_simmat,thresh_D)
     epsilon = tf.constant(np.ones(ng_label.get_shape()[:2]).astype(np.float32) *1e-6)
     pts_iou = tf.reduce_sum(tf.cast(tf.logical_and(ng, ng_label), tf.float32), axis=2) / \
                       (tf.reduce_sum(tf.cast(tf.logical_or(ng, ng_label), tf.float32), axis=2) + epsilon)
@@ -160,9 +163,8 @@ def placeholder_inputs_stage_2(batch_size,num_point):
     return pointclouds_pl,proposal_nx_pl,dof_mask_pl,dof_score_pl
 
 def get_stage_2(dof_feat,simmat_feat,dof_mask_pl,proposal_nx_pl,is_training,bn_decay=None):
-
-    dof_feat = tf_util.conv1d(dof_feat,512,1,padding='VALID',activation_fn = None,scope = 'stage2/task1/smat_fc1')
-    simmat_feat = tf_util.conv1d(simmat_feat,512,1,padding='VALID',activation_fn = None,scope = 'stage2/task1/dof_fc1')
+    dof_feat = tf_util.conv1d(dof_feat,512,1,padding='VALID',is_training=is_training, bn=True, scope = 'stage2/task1/smat_fc1', bn_decay=bn_decay)
+    simmat_feat = tf_util.conv1d(simmat_feat,512,1,padding='VALID',is_training=is_training,bn=True,scope = 'stage2/task1/dof_fc1', bn_decay=bn_decay)
     proposal_nx_pl = tf.expand_dims(proposal_nx_pl,axis = -1)
     proposal_nx_pl = tf.cast(tf.tile(proposal_nx_pl,[1,1,512]),tf.float32)
     simmat_feat_mul = simmat_feat * proposal_nx_pl
@@ -174,13 +176,13 @@ def get_stage_2(dof_feat,simmat_feat,dof_mask_pl,proposal_nx_pl,is_training,bn_d
     dof_mask_pl = tf.expand_dims(dof_mask_pl,axis =-1)
     dof_mask_pl = tf.cast(tf.tile(dof_mask_pl,[1,1,1024]),tf.float32)
     all_feat = all_feat * dof_mask_pl
-    feat1 = tf_util.conv1d(all_feat,1024,1,padding='VALID',activation_fn = None,scope = 'stage2/task1/fc1')
-    feat2 = tf_util.conv1d(feat1,512,1,padding='VALID',activation_fn = None,scope = 'stage2/task1/fc2')
-    feat3 = tf_util.conv1d(feat2,256,1,padding='VALID',activation_fn = None,scope = 'stage2/task1/fc3')
+    feat1 = tf_util.conv1d(all_feat,1024,1,padding='VALID',is_training=is_training,bn=True,scope = 'stage2/task1/fc1', bn_decay=bn_decay)
+    feat2 = tf_util.conv1d(feat1,512,1,padding='VALID',is_training=is_training,bn=True,scope = 'stage2/task1/fc2', bn_decay=bn_decay)
+    feat3 = tf_util.conv1d(feat2,256,1,padding='VALID',is_training=is_training,bn=True,scope = 'stage2/task1/fc3', bn_decay=bn_decay)
     pred_dof_score = tf_util.conv1d(feat3, 1,1, padding='VALID', activation_fn=None, scope='stage2/task1/fc4')
     pred_dof_score = tf.nn.sigmoid(pred_dof_score, name='stage2/task_1/score')
     pred_dof_score = tf.squeeze(pred_dof_score,axis = -1)
-    return pred_dof_score
+    return pred_dof_score, feat3
 
 
 def get_stage_2_loss(pred_dof_score,dof_score_pl,dof_mask_pl):
@@ -188,5 +190,9 @@ def get_stage_2_loss(pred_dof_score,dof_score_pl,dof_mask_pl):
     dof_score_pl = tf.expand_dims(dof_score_pl,-1)
     pred_dof_score = tf.expand_dims(pred_dof_score,axis = -1)
     loss = tf.reduce_mean(tf.reduce_sum(tf.reduce_mean(smooth_l1_dist(pred_dof_score-dof_score_pl),axis=2)*dof_mask_pl, \
-                               axis = 1)/tf.reduce_sum(dof_mask_pl,axis=1))
+                               axis = 1)/(tf.reduce_sum(dof_mask_pl,axis=1)))
+    # loss = tf.reduce_mean(tf.reduce_sum(tf.reduce_mean(tf.abs(pred_dof_score-dof_score_pl),axis=2), \
+    #                            axis = 1))                               
+    # import pdb
+    # pdb.set_trace()
     return loss

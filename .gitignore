@@ -1,1 +1,13 @@
 *.pyc
+*.mat
+*.ply
+*.pcd
+*.png
+*.gif
+result/
+*log/
+*.asv
+dataset/
+*toy/
+train_data
+train_data/
