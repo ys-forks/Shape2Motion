@@ -56,9 +56,10 @@ if __name__ == "__main__":
         arrow_poss = selected_motions[:, :3]
         arrow_dirs = selected_motions[:, 3:6]
         arrow_dirs = arrow_dirs / np.linalg.norm(arrow_dirs, axis=1).reshape(-1, 1)
-        # pdb.set_trace()
+        
         cm = plt.get_cmap('jet')
         color = cm(pred_score[pred_dof_mask.astype(bool)])
+        pdb.set_trace()
 
         viz.add_trimesh_arrows(arrow_poss[::3], arrow_dirs[::3], colors=color[::3], radius=0.005, length=0.1)
         viz.show()

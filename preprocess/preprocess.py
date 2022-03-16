@@ -207,7 +207,9 @@ def generate_gt(mesh_path, motion_path):
         instance_data['motion_direction_class'][anchor_indices] = direction_class + 1
         instance_data['motion_direction_delta'][anchor_indices] = direction_delta
         instance_data['motion_position_param'][anchor_indices] = position_param[anchor_indices]
-        instance_data['motion_dof_type'][anchor_indices][instance_data['motion_dof_type'][anchor_indices] != motion_type] += motion_type
+        tmp = instance_data['motion_dof_type'][anchor_indices]
+        tmp[instance_data['motion_dof_type'][anchor_indices] != motion_type] += motion_type
+        instance_data['motion_dof_type'][anchor_indices] = tmp
         instance_data['dof_matrix'][i] = np.concatenate((center, direction, [motion_type]))
         segm_id = part_info[node['dof_name']]
         instance_data['proposal'][i+1] = segms == segm_id
@@ -249,8 +251,8 @@ def generate_data(df, set='train', categories=['bike']):
     count = 0
     # (Path(result_path) / f'{set}_data').mkdir(parents=True, exist_ok=True)
     io.make_clean_folder(Path(result_path) / f'{set}_data')
-    for i in range(0, len(data_df), B):
-        batch = data_df[0:0+B]
+    for i in range(i, len(data_df), B):
+        batch = data_df[i:i+B]
         output_path = Path(result_path) / f'{set}_data' / f'{set}ing_data_{count+1}.mat'
         export_data(batch, output_path)
         count += 1
@@ -259,5 +261,5 @@ def generate_data(df, set='train', categories=['bike']):
 if __name__ == '__main__':
     data_df = split_data()
 
-    generate_data(data_df, 'train')
-    generate_data(data_df, 'test')
+    # generate_data(data_df, 'train')
+    # generate_data(data_df, 'test')

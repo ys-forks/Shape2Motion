@@ -44,6 +44,9 @@ if __name__ == "__main__":
     print(anchor_displ_param.shape)
     print(motion_type.shape)
 
+    print('motion_type')
+    print(np.unique(motion_type))
+
     print(np.unique(anchor, return_counts=True, axis=0))
     # pdb.set_trace()
     pid = 2
@@ -68,7 +71,9 @@ if __name__ == "__main__":
     arrow_colors = []
     for i in range(len(arrow_dirs)):
         a_type = dof_matrix[i, -1]
-        arrow_colors.append(Viewer.rgba_by_index(a_type.astype(int)))
+        print(a_type)
+        # arrow_colors.append(Viewer.rgba_by_index(-1+a_type.astype(int)))
+        arrow_colors.append([1.0,0,0,1.0])
     arrow_colors = np.asarray(arrow_colors)
     # pdb.set_trace()
 
@@ -80,5 +85,5 @@ if __name__ == "__main__":
         sphere.apply_transform(t)
         viz.add_trimesh(sphere)
 
-    viz.add_trimesh_arrows(arrow_poss, arrow_dirs, colors=arrow_colors, radius=0.005, length=0.1)
+    viz.add_trimesh_arrows(arrow_poss, arrow_dirs, colors=arrow_colors, radius=0.005, length=0.2)
     viz.show()

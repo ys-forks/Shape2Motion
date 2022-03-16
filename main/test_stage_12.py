@@ -148,7 +148,7 @@ def train():
                 train_op = optimizer.minimize(loss, global_step=batch_stage_1)
             
                 # Add ops to save and restore all the variables.
-                saver = tf.train.Saver(max_to_keep=100)
+                saver = tf.train.Saver(max_to_keep=10)
             elif STAGE==2:
                 print('stage_2')
                 pointclouds_pl,proposal_nx_pl,dof_mask_pl,dof_score_pl= MODEL.placeholder_inputs_stage_2(BATCH_SIZE,NUM_POINT)
@@ -206,7 +206,7 @@ def train():
         test_writer = tf.summary.FileWriter(os.path.join(LOG_DIR, 'test'), sess.graph)
 
         # Init variables
-        model_path = './'+LOG_DIR + '/model100.ckpt'
+        model_path = './'+LOG_DIR + '/model50.ckpt'
         if STAGE == 1:
             #init = tf.global_variables_initializer()
             #sess.run(init)
@@ -410,7 +410,7 @@ def eval_one_epoch_stage_2(sess, ops, train_writer):
     is_training = False
 
     dataset = []
-    for i in range(6):
+    for i in range(10):
         dataset.append(f'./train_data_stage_2/train_stage_2_data_{i+1}.mat')
     # dataset = ['./test_data_stage_2/train_stage_2_data_4.mat']
     for i in range(len(dataset)):

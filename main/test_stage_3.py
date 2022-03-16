@@ -128,7 +128,7 @@ def train():
 
 
         # Init variables
-        model_path = './'+LOG_DIR + '/model50.ckpt'
+        model_path = './'+LOG_DIR + '/model100.ckpt'
         init = tf.global_variables_initializer()
         sess.run(init)
         saver.restore(sess,model_path)
@@ -154,7 +154,7 @@ def train():
 
 def eval_one_epoch_stage_3(sess, ops, train_writer):
     is_training = True
-    for i in range(6):
+    for i in range(10):
         load_data_start_time = time.time();
         loadpath = './train_data_stage_3/train_data_stage_3_data_'+str(i+1)+'.mat'
         train_data = sio.loadmat(loadpath)['Training_data']

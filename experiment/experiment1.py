@@ -21,7 +21,7 @@ if __name__ == "__main__":
     train_data = sio.loadmat(loadpath)['Training_data']
     print(len(train_data))
     
-    for idx in range(0, len(train_data), 2):
+    for idx in range(0, len(train_data), 5):
         print(idx)
         instance_data = train_data[idx][0]
         # print(instance_data.keys())
@@ -44,6 +44,7 @@ if __name__ == "__main__":
         viz = Viewer(vertices=xyz, mask=gt_proposal.astype(int))
         arrow_pos = gt_dof[:3]
         arrow_dir = gt_dof[3:6]
+        print(gt_dof[6])
         # pdb.set_trace()
         arrow_dir = arrow_dir / np.linalg.norm(arrow_dir)
         viz.add_trimesh_arrows([arrow_pos], [arrow_dir], length=1.0)
@@ -58,11 +59,11 @@ if __name__ == "__main__":
         # pdb.set_trace()
         cm = plt.get_cmap('jet')
         color = cm(pred_score[pred_anchor > 0])
+        print(motions[:, 6])
         print(np.unique(pred_score[pred_anchor > 0]))
         # color *= 255
         # color = color.astype('uint8')
-        pdb.set_trace()
-        viz.add_trimesh_arrows(arrow_poss[::3], arrow_dirs[::3], colors=color[::3], radius=0.005, length=0.1)
+        viz.add_trimesh_arrows(arrow_poss[::5], arrow_dirs[::5], colors=color[::5], radius=0.005, length=0.1)
         viz.show()
 
         # pcd = o3d.geometry.PointCloud(o3d.utility.Vector3dVector(xyz))

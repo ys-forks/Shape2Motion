@@ -61,27 +61,27 @@ def get_stage_1(dof_feat,simmat_feat,is_training,bn_decay=None):
     batch_size = dof_feat.get_shape()[0].value
 
     #task1: key_point
-    feat1 = tf_util.conv1d(dof_feat,128,1,padding='VALID', is_training=is_training,  bn=True,scope = 'stage1/task1/fc1', bn_decay=bn_decay)
+    feat1 = tf_util.conv1d(dof_feat,128,1,padding='VALID', is_training=is_training, bn=False,scope = 'stage1/task1/fc1', bn_decay=bn_decay)
     pred_labels_key_p = tf_util.conv1d(feat1, 2, 1, padding='VALID', activation_fn=None, scope='stage1/task1/fc2', bn_decay=bn_decay)
 
     #task2_1: labels_direction
-    feat2_1 = tf_util.conv1d(dof_feat,128,1,padding='VALID',is_training=is_training, bn=True,scope = 'stage1/task2_1/fc1', bn_decay=bn_decay)
+    feat2_1 = tf_util.conv1d(dof_feat,128,1,padding='VALID',is_training=is_training, bn=False,scope = 'stage1/task2_1/fc1', bn_decay=bn_decay)
     pred_labels_direction = tf_util.conv1d(feat2_1, 15, 1, padding='VALID', activation_fn=None, scope='stage1/task2_1/fc2', bn_decay=bn_decay)
 
     #task2_2: regression_direction
-    feat2_2 = tf_util.conv1d(dof_feat,128,1,padding='VALID',is_training=is_training,bn=True,scope = 'stage1/task2_2/fc1', bn_decay=bn_decay)
+    feat2_2 = tf_util.conv1d(dof_feat,128,1,padding='VALID',is_training=is_training,bn=False,scope = 'stage1/task2_2/fc1', bn_decay=bn_decay)
     pred_regression_direction = tf_util.conv1d(feat2_2, 3, 1, padding='VALID', activation_fn=None, scope='stage1/task2_2/fc2', bn_decay=bn_decay)
 
     #task_3: position
-    feat3 = tf_util.conv1d(dof_feat,128,1,padding='VALID',is_training=is_training,bn=True,scope = 'stage1/task3/fc1', bn_decay=bn_decay)
+    feat3 = tf_util.conv1d(dof_feat,128,1,padding='VALID',is_training=is_training,bn=False,scope = 'stage1/task3/fc1', bn_decay=bn_decay)
     pred_regression_position = tf_util.conv1d(feat3, 3, 1, padding='VALID', activation_fn=None, scope='stage1/task3/fc2', bn_decay=bn_decay)
 
     #task_4: dof_type
-    feat4 = tf_util.conv1d(dof_feat,128,1,padding='VALID',is_training=is_training,bn=True,scope = 'stage1/task4/fc1', bn_decay=bn_decay)
+    feat4 = tf_util.conv1d(dof_feat,128,1,padding='VALID',is_training=is_training,bn=False,scope = 'stage1/task4/fc1', bn_decay=bn_decay)
     pred_labels_type = tf_util.conv1d(feat4, 4, 1, padding='VALID', activation_fn=None, scope='stage1/task4/fc2', bn_decay=bn_decay)
 
     #task_5: similar matrix
-    feat5 = tf_util.conv1d(simmat_feat,128,1,padding='VALID', is_training=is_training,activation_fn=None, scope = 'stage1/task_5/fc1', bn_decay=bn_decay)
+    feat5 = tf_util.conv1d(simmat_feat,128,1,padding='VALID', scope = 'stage1/task_5/fc1', bn_decay=bn_decay)
     r = tf.reduce_sum(feat5*feat5,2)
     r = tf.reshape(r, [batch_size, -1, 1])
     D = r-2*tf.matmul(feat5,tf.transpose(feat5,perm=[0,2,1]))+tf.transpose(r, perm=[0,2,1])
@@ -90,7 +90,7 @@ def get_stage_1(dof_feat,simmat_feat,is_training,bn_decay=None):
     pred_simmat = tf.maximum(D, 0.)
 
     #task_6: confidence map
-    feat6 = tf_util.conv1d(simmat_feat,128,1,padding='VALID',is_training=is_training,bn=True, scope = 'stage1/task6/fc1', bn_decay=bn_decay)
+    feat6 = tf_util.conv1d(simmat_feat,128,1,padding='VALID',is_training=is_training,bn=False, scope = 'stage1/task6/fc1', bn_decay=bn_decay)
     conf_logits = tf_util.conv1d(feat6,1,1,padding='VALID',activation_fn=None, scope = 'stage1/task_6/fc2', bn_decay=bn_decay)
     pred_conf_logits = tf.nn.sigmoid(conf_logits, name='stage1/task_6/confidence')
 
