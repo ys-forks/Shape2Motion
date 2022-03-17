@@ -30,7 +30,7 @@ if __name__ == "__main__":
     proposal = tf.greater(tf.cast(proposal,tf.float32),0.5)
 
     print(len(proposal))
-    for idx in range(0, len(proposal), 1):
+    for idx in range(0, len(proposal), 5):
         print(idx)
         instance_data = train_data[idx][0]
         
@@ -59,7 +59,7 @@ if __name__ == "__main__":
         
         cm = plt.get_cmap('jet')
         color = cm(pred_score[pred_dof_mask.astype(bool)])
-        pdb.set_trace()
+        # pdb.set_trace()
 
         viz.add_trimesh_arrows(arrow_poss[::3], arrow_dirs[::3], colors=color[::3], radius=0.005, length=0.1)
         viz.show()

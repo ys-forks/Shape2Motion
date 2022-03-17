@@ -29,10 +29,10 @@ if __name__ == "__main__":
         inputs_all = instance_data['inputs_all'][0, 0]
         xyz = tf.slice(inputs_all, [0,0], [-1,3]).numpy()
         normals = tf.slice(inputs_all, [0,3], [-1,3]).numpy()
+
         # ['GT_dof', 'GT_proposal_nx', 'dof_mask', 'dof_pred', 'dof_score', 'inputs_all', 'proposal_nx']
 
         gt_proposal = instance_data['GT_proposal_nx'][0, 0].flatten()
-        print(gt_proposal)
         gt_dof = instance_data['GT_dof'][0, 0].flatten()
 
         pred_anchor = instance_data['dof_mask'][0, 0].flatten()
