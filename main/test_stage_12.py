@@ -206,7 +206,7 @@ def train():
         test_writer = tf.summary.FileWriter(os.path.join(LOG_DIR, 'test'), sess.graph)
 
         # Init variables
-        model_path = './'+LOG_DIR + '/model50.ckpt'
+        model_path = './'+LOG_DIR + '/model100.ckpt'
         if STAGE == 1:
             #init = tf.global_variables_initializer()
             #sess.run(init)

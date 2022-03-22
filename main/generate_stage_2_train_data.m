@@ -79,7 +79,7 @@ axis_p = position + core_pred_regression_position;
 axis_v = direction + core_pred_regression_direction;
 pred_simmat = reshape(pred_simmat,4096,4096);
 s_mat = zeros(4096);
-s_mat(pred_simmat<=100)=1;
+s_mat(pred_simmat<=120)=1;
 s_mat = unique(s_mat,'rows');
 GT_proposal = model_pred.proposal;
 GT_proposal(1,:) = [];

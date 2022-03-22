@@ -228,7 +228,7 @@ def generate_gt(mesh_path, motion_path):
 def export_data(batch, output):
     batch_gt = []
     for i, row in batch.iterrows():
-        row = list(batch.iterrows())[0][1]
+        # row = list(batch.iterrows())[0][1]
         cat, inst = row['category'], row['instanceId']
         print(f'{cat}/{inst}')
         mesh_path = Path(dataset_path) / cat / inst / 'part_objs'
@@ -241,9 +241,11 @@ def export_data(batch, output):
     sio.savemat(str(output), output_mat)
     print(f'export to {output}')
 
-def generate_data(df, set='train', categories=['bike']):
+def generate_data(df, set='train', categories=[]):
     data_df = df.loc[set]
-    data_df = data_df[data_df['category'].isin(categories)]
+    if len(categories) > 0:
+        data_df = data_df[data_df['category'].isin(categories)]
+    
     print(len(data_df))
     B = 16
     if set == 'test':
@@ -251,7 +253,7 @@ def generate_data(df, set='train', categories=['bike']):
     count = 0
     # (Path(result_path) / f'{set}_data').mkdir(parents=True, exist_ok=True)
     io.make_clean_folder(Path(result_path) / f'{set}_data')
-    for i in range(i, len(data_df), B):
+    for i in range(0, len(data_df), B):
         batch = data_df[i:i+B]
         output_path = Path(result_path) / f'{set}_data' / f'{set}ing_data_{count+1}.mat'
         export_data(batch, output_path)
@@ -261,5 +263,6 @@ def generate_data(df, set='train', categories=['bike']):
 if __name__ == '__main__':
     data_df = split_data()
 
-    # generate_data(data_df, 'train')
-    # generate_data(data_df, 'test')
+    generate_data(data_df, 'train', categories=['bike', 'laptop', 'fan', 'car'])
+    # generate_data(data_df, 'train', categories=['cabinet'])
+    # generate_data(data_df, 'test', categories=['motorbike', 'eyeglasses'])

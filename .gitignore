@@ -11,3 +11,6 @@ dataset/
 *toy/
 train_data
 train_data/
+download/
+*.mat
+*.pkt

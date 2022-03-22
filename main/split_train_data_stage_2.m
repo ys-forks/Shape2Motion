@@ -1,7 +1,7 @@
 function split_train_data_stage_2
 temp = [];
 index = 1;
-for i = 1:4
+for i = 1:20
     i
     tic;
     path = ['train_data_stage_2_all/train_stage_2_all_data_',num2str(i),'.mat'];

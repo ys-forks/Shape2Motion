@@ -3,10 +3,6 @@ filepath = 'test_result_s_3';
 file = dir(fullfile(filepath,'*.mat'));
 filenames = {file.name}';
 
-FindFiles = 'train_data_stage_2';
-Files = dir(fullfile(FindFiles,'*.mat'));
-filenames2 = {Files.name}';
-
 all_p_error = [];
 all_d_err = [];
 all_epe = [];

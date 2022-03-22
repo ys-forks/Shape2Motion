@@ -17,11 +17,11 @@ COLOR20 = np.array(
      [170, 255, 195], [128, 128, 0], [255, 215, 180], [0, 0, 128], [128, 128, 128]])
 
 if __name__ == "__main__":
-    loadpath = '../main/train_data_stage_2/train_stage_2_data_1.mat'
+    loadpath = '../main/train_data_stage_2/train_stage_2_data_6.mat'
     train_data = sio.loadmat(loadpath)['Training_data']
     print(len(train_data))
     
-    for idx in range(0, len(train_data), 5):
+    for idx in range(0, len(train_data), 20):
         print(idx)
         instance_data = train_data[idx][0]
         # print(instance_data.keys())

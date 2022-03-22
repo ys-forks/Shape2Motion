@@ -20,7 +20,7 @@ os.environ['PYOPENGL_PLATFORM'] = 'egl'
 
 
 class Viewer:
-    def __init__(self, vertices=None, faces=None, colors=None, mask=None):
+    def __init__(self, vertices=None, faces=None, colors=None, normals=None, mask=None):
         self.vertices = vertices
         self.faces = faces
         self.colors = colors
@@ -32,9 +32,10 @@ class Viewer:
         self.scene = pyrender.Scene()
         self.scene.ambient_light = [1.0, 1.0, 1.0]
         if vertices is not None:
-            self.add_geometry(vertices, faces, colors, mask)
+            self.add_geometry(vertices, faces, colors, normals, mask)
         self.caption = None
         self.point_size = 10
+        self.normals = None
 
     head_body_ratio = 1.0 / 4
 
@@ -77,15 +78,16 @@ class Viewer:
         self.trimesh = trimesh.load(mesh_path, force='mesh')
         assert isinstance(self.trimesh, trimesh.base.Trimesh)
 
-    def add_geometry(self, vertices, faces=None, colors=None, mask=None):
+    def add_geometry(self, vertices, faces=None, colors=None, normals=None, mask=None):
         if colors is None and mask is not None:
             colors = Viewer.colors_from_mask(mask)
         if faces is not None:
             geo = trimesh.base.Trimesh(vertices, faces=faces, vertex_colors=colors)
             self.add_trimesh(geo)
         else:
-            geo = trimesh.points.PointCloud(vertices, vertex_colors=colors)
+            geo = trimesh.points.PointCloud(vertices, vertex_colors=colors, vertex_normals=normals)
             self.add_point_cloud(geo)
+            self.normals = normals
 
     def add_trimesh(self, mesh):
         self.trimesh_list.append(mesh)
@@ -163,7 +165,7 @@ class Viewer:
             self.scene.add(mesh)
         if self.point_cloud is not None:
             log.debug('add point cloud to scene')
-            point_cloud = pyrender.Mesh.from_points(self.point_cloud.vertices, colors=self.point_cloud.colors)
+            point_cloud = pyrender.Mesh.from_points(self.point_cloud.vertices, colors=self.point_cloud.colors, normals=self.normals)
             self.scene.add(point_cloud)
 
     def show(self, window_size=None, window_name='Default Viewer'):
@@ -238,7 +240,7 @@ class Viewer:
         if self.trimesh is None or self.point_cloud is None:
             self._merge_geometries()
         if self.point_cloud is not None:
-            mesh = trimesh.base.Trimesh(self.point_cloud.vertices, vertex_colors=self.point_cloud.colors)
+            mesh = trimesh.base.Trimesh(self.point_cloud.vertices, vertex_colors=self.point_cloud.colors, vertex_normals=self.normals)
         if self.trimesh is not None:
             if self.point_cloud is not None:
                 mesh = trimesh.util.concatenate(self.trimesh, mesh)
