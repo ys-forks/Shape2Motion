@@ -85,9 +85,9 @@ def get_stage_1(dof_feat,simmat_feat,is_training,bn_decay=None):
     r = tf.reduce_sum(feat5*feat5,2)
     r = tf.reshape(r, [batch_size, -1, 1])
     D = r-2*tf.matmul(feat5,tf.transpose(feat5,perm=[0,2,1]))+tf.transpose(r, perm=[0,2,1])
-    D = tf.sqrt(D)
-    # pred_simmat = tf.maximum(10*D,0.)
-    pred_simmat = tf.maximum(D, 0.)
+    # D = tf.sqrt(D)
+    pred_simmat = tf.maximum(10*D,0.)
+    # pred_simmat = tf.maximum(D, 0.)
 
     #task_6: confidence map
     feat6 = tf_util.conv1d(simmat_feat,128,1,padding='VALID',is_training=is_training,bn=False, scope = 'stage1/task6/fc1', bn_decay=bn_decay)
@@ -130,7 +130,7 @@ def get_stage_1_loss(pred_labels_key_p,pred_labels_direction,pred_regression_dir
                           labels_type),tf.float32)*mask,axis = 1)/tf.reduce_sum(mask,axis=1))
 
     #loss: task_5
-    thresh_D = 100
+    thresh_D = 80
     pos = pred_simmat*simmat_pl
     neg = tf.maximum(thresh_D-pred_simmat,0) * neg_simmat_pl
     task_5_loss = tf.reduce_mean(pos+neg)

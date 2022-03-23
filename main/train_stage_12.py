@@ -271,7 +271,7 @@ def train():
 
 def train_one_epoch_stage_1(sess, ops, train_writer):
     is_training = True
-    permutation = np.random.permutation(4)
+    permutation = np.random.permutation(37)
     for i in range(int(len(permutation)/4)):
         load_data_start_time = time.time();
         loadpath = './train_data/training_data_'+str(permutation[i*4]+1)+'.mat'
@@ -323,9 +323,9 @@ def train_one_epoch_stage_1(sess, ops, train_writer):
                 batch_regression_position[cnt,:,:] = tmp_data['motion_position_param'][0,0]
                 batch_labels_type[cnt,:] = np.squeeze(tmp_data['motion_dof_type'][0,0])
                 tmp_simmat = tmp_data['similar_matrix'][0,0]
-                # batch_simmat_pl[cnt,:,:] = tmp_simmat + tmp_simmat.T
+                batch_simmat_pl[cnt,:,:] = tmp_simmat + tmp_simmat.T
                 tmp_neg_simmat = 1 - tmp_simmat
-                # tmp_neg_simmat = tmp_neg_simmat - np.eye(NUM_POINT)
+                tmp_neg_simmat = tmp_neg_simmat - np.eye(NUM_POINT)
                 batch_neg_simmat_pl[cnt,:,:] = tmp_neg_simmat
             feed_dict = {ops['pointclouds_pl']: batch_inputs,
                          ops['labels_key_p']: batch_labels_key_p,

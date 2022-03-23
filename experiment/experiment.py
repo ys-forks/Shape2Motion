@@ -17,11 +17,11 @@ COLOR20 = np.array(
      [170, 255, 195], [128, 128, 0], [255, 215, 180], [0, 0, 128], [128, 128, 128]])
 
 if __name__ == "__main__":
-    loadpath = '../download/train_data/training_data_35.mat'
+    loadpath = '../download/train_data/training_data_5.mat'
     train_data = sio.loadmat(loadpath)['Training_data']
     print(len(train_data))
     
-    for i in range(0, len(train_data)):
+    for i in range(0, len(train_data), 10):
         instance_data = train_data[i][0]
         print(len(train_data[i]))
         # print(instance_data.keys())
@@ -66,6 +66,8 @@ if __name__ == "__main__":
             mask[i] = proposal[i]*i
         mask = np.sum(mask, axis=0)
 
+        # pdb.set_trace()
+
         # gt viz
         # for j in range(0, len(similar_matrix), 5):
         # pdb.set_trace()
@@ -90,6 +92,7 @@ if __name__ == "__main__":
         norm_length = np.linalg.norm(normals, axis=1) / 3
         pt_color = cm( norm_length )
         viz = Viewer(vertices=xyz, colors=pt_color)
+        # viz = Viewer(vertices=xyz, mask=mask)
         arrow_poss = dof_matrix[:, :3]
         arrow_dirs = dof_matrix[:, 3:6]
         arrow_dirs = arrow_dirs / np.linalg.norm(arrow_dirs, axis=1).reshape(-1, 1)
